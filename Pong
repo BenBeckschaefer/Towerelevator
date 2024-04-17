@@ -1,0 +1,148 @@
+package game.core;
+
+import java.util.Random;
+
+import com.badlogic.gdx.ApplicationAdapter;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
+public class Pong extends ApplicationAdapter {
+	private SpriteBatch batch;
+	private BitmapFont font;
+	Ball ball;
+	Paddle paddleLeft;
+	Paddle paddleRight;
+	ShapeRenderer shape;
+	int pointsRight = 0;
+	int pointsLeft = 0;
+	boolean start = false;
+	boolean end = false;
+	Random rand;
+	
+	@Override
+	public void create () {
+		rand = new Random();
+		ball = new Ball(Gdx.graphics.getWidth()/3, Gdx.graphics.getHeight()/2, 15, 6, 7);
+		batch = new SpriteBatch();
+		font = new BitmapFont();
+		font.getData().setScale(4);
+		shape = new ShapeRenderer();
+		paddleLeft = new Paddle(40, Gdx.graphics.getHeight()/3, 15, 100, 7);
+		paddleRight = new Paddle(Gdx.graphics.getWidth()-55, Gdx.graphics.getHeight()/3*2, 15, 100, 7);
+	}
+	
+	@Override
+	public void dispose() {
+		batch.dispose();
+		font.dispose();
+	}
+
+	@Override
+	public void render () {
+		
+		if(start) {
+			// clears everything and starts the game
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			
+			batch.begin();
+			
+			String left = String.valueOf(pointsLeft);
+			String right = String.valueOf(pointsRight);
+			font.draw(batch, left, Gdx.graphics.getWidth()/2-80, Gdx.graphics.getHeight()-20);
+			font.draw(batch, right, Gdx.graphics.getWidth()/2+40, Gdx.graphics.getHeight()-20);
+			
+			batch.end();
+			
+			shape.begin(ShapeRenderer.ShapeType.Filled);
+			
+			if(Gdx.input.isKeyPressed(Input.Keys.UP) && paddleRight.y <= (Gdx.graphics.getHeight() - paddleRight.height)) {
+				paddleRight.y += paddleRight.ySpeed;
+			}else if(Gdx.input.isKeyPressed(Input.Keys.DOWN) && paddleRight.y >= 0) {
+				paddleRight.y -= paddleRight.ySpeed;
+			}
+			if(ball.y < paddleLeft.y + paddleLeft.height/2 && paddleLeft.y > 0) {
+				paddleLeft.y -= paddleLeft.ySpeed;
+			}else if(ball.y > paddleLeft.y + paddleLeft.height/2 && paddleLeft.y < Gdx.graphics.getHeight() - paddleLeft.height) {
+				paddleLeft.y += paddleLeft.ySpeed;
+			}
+			/* multiplayer code
+			 * enable for playing with 2 Players
+			
+			if(Gdx.input.isKeyPressed(Input.Keys.W)&& paddleLeft.y <= (Gdx.graphics.getHeight() - paddleLeft.height)) {
+				paddleLeft.y += paddleLeft.ySpeed;
+			}else if(Gdx.input.isKeyPressed(Input.Keys.S) && paddleLeft.y >= 0) {
+				paddleLeft.y -= paddleLeft.ySpeed;
+			}
+			
+			*/
+			// method for influencing the speed change of the ball
+			if(ball.collidesWith(paddleLeft) || ball.collidesWith(paddleRight)) {
+				ball.xSpeed *= rand.nextFloat(1.1f, 1.7f);
+				ball.ySpeed *= rand.nextFloat(0.8f, 1.3f);
+			}
+			if(ball.x - ball.size - 2 <= 0) {
+				ball.xSpeed = 6;
+				ball.ySpeed = 5;
+				pointsRight += 1;
+				if(pointsRight == 10) {
+					start = false;
+					end = true;
+				}
+				ball.x = Gdx.graphics.getWidth()* 1/5;
+				ball.y = Gdx.graphics.getHeight()* 2/5;
+			}
+			if(ball.x + ball.size + 2 >= Gdx.graphics.getWidth()) {
+				ball.xSpeed = -6;
+				ball.ySpeed = -5;
+				pointsLeft += 1;
+				if(pointsLeft == 10) {
+					start = false;
+					end = true;
+				}
+				ball.x = Gdx.graphics.getWidth()* 4/5;
+				ball.y = Gdx.graphics.getHeight()* 3/5; 
+			}
+			// collision checking, position updating and drawing of everything
+			ball.checkCollision(paddleLeft);
+			ball.checkCollision(paddleRight);
+			ball.update();
+			ball.draw(shape);
+			
+			paddleLeft.update();
+			paddleRight.update();
+			paddleLeft.draw(shape);
+			paddleRight.draw(shape);
+			
+			shape.end();
+		}else if(end) {
+			// shows end screen and restarts the game
+			batch.begin();
+			
+			font.draw(batch, "GAME OVER", Gdx.graphics.getWidth()/3-20, Gdx.graphics.getHeight()/2+40);
+			font.draw(batch, "Press Space to start!", Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2-40);
+			if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+				Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+				end = false;
+				start = true;
+				pointsLeft = 0;
+				pointsRight = 0;
+			}
+			batch.end();
+		}else {
+			// shows the starting screen
+			batch.begin();
+		
+			font.draw(batch, "PONG-CLONE", Gdx.graphics.getWidth()/3-20, Gdx.graphics.getHeight()/2+40);
+			font.draw(batch, "Press Space to start!", Gdx.graphics.getWidth()/4, Gdx.graphics.getHeight()/2-40);
+			if(Gdx.input.isKeyPressed(Input.Keys.SPACE)) {
+			Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+			start = true;
+			}
+			batch.end();
+		}	
+	}
+}
