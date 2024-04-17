@@ -1,0 +1,25 @@
+package game.core;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.glutils.ShapeRenderer;
+
+public class Paddle {
+	int x, y, width, height, ySpeed;
+	
+	public Paddle(int x, int y, int width, int height, int ySpeed) {
+		this.x = x;
+		this.y = y;
+		this.width = width;
+		this.height = height;
+		this.ySpeed = ySpeed;
+	}
+	public void update() {
+		// method for controlling the panel with the mouse
+		// enable for easy mode
+		// controls both panels!
+		//y = -1 * Gdx.input.getY() + Gdx.graphics.getHeight();
+	}
+	public void draw(ShapeRenderer shape) {
+		shape.rect(x, y, width, height);
+	}
+}
